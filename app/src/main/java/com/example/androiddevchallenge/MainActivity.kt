@@ -18,12 +18,37 @@ package com.example.androiddevchallenge
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.ProgressIndicatorDefaults
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import com.example.androiddevchallenge.utils.Counter
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,11 +61,99 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+private const val ONE_MINUTE_IN_MILLIS = 60000L
+private const val COUNT_DOWN_INTERVAL = 1000L
+
 // Start building your app here!
 @Composable
 fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
-        Text(text = "Ready... Set... GO!")
+        MainContent()
+    }
+}
+
+@Composable
+fun MainContent() {
+    val progress = remember { mutableStateOf(0f) }
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress.value,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
+    )
+    val buttonState = remember { mutableStateOf("Start") }
+    val textState = remember { mutableStateOf("60") }
+
+    val countDownTimer =
+        Counter(
+            millisInFuture = ONE_MINUTE_IN_MILLIS, countDownInterval = COUNT_DOWN_INTERVAL,
+            {
+                // On Tick
+
+                // 0.001 * 60 * 1000
+                // 0.06
+
+                progress.value = (it / 1000 / 1000).toFloat()
+
+                textState.value = TimeUnit.MILLISECONDS.toSeconds(it).toString()
+            },
+            {
+                // On Finish
+                progress.value = 0f
+                buttonState.value = "Start"
+                textState.value = "60"
+            }
+        )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        MyCircularProgressIndicator(animatedProgress, textState.value)
+        Spacer(Modifier.height(30.dp))
+        CounterStateButton(buttonState.value) {
+            if (buttonState.value == "Start") {
+                countDownTimer.start()
+            } else {
+                countDownTimer.cancel()
+            }
+            buttonState.value = it
+        }
+    }
+}
+
+@Composable
+fun CounterStateButton(buttonTextState: String, onClickButton: (String) -> Unit) {
+    OutlinedButton(
+        onClick = {
+            onClickButton(if (buttonTextState == "Start") "Stop" else "Start")
+        }
+    ) {
+        Text(buttonTextState)
+    }
+}
+
+@Composable
+fun MyCircularProgressIndicator(animatedProgress: Float, timerTextState: String) {
+    Box(
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .padding(16.dp)
+                .size(400.dp),
+            progress = animatedProgress,
+            strokeWidth = 7.dp
+        )
+        Text(
+            modifier = Modifier.padding(bottom = 50.dp),
+            style = TextStyle(
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                fontSize = 50.sp
+            ),
+            text = timerTextState
+        )
     }
 }
 
@@ -52,10 +165,11 @@ fun LightPreview() {
     }
 }
 
+/*
 @Preview("Dark Theme", widthDp = 360, heightDp = 640)
 @Composable
 fun DarkPreview() {
     MyTheme(darkTheme = true) {
         MyApp()
     }
-}
+}*/
