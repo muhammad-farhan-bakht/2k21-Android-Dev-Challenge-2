@@ -84,7 +84,7 @@ fun MyApp() {
 @ExperimentalAnimationApi
 @Composable
 fun MainContent() {
-    val progress = remember { mutableStateOf(1.0f) }
+    val progress = remember { mutableStateOf(0.0f) }
     val buttonState = remember { mutableStateOf("Start") }
     val textState = remember { mutableStateOf("60") }
     val visible = remember { mutableStateOf(true) }
@@ -94,13 +94,13 @@ fun MainContent() {
             millisInFuture = ONE_MINUTE_IN_MILLIS, countDownInterval = COUNT_DOWN_INTERVAL,
             {
                 // On Tick
-                progress.value = it.toFloat() / ONE_MINUTE_IN_MILLIS.toFloat()
+                progress.value = 1 - (it.toFloat() / ONE_MINUTE_IN_MILLIS)
 
                 textState.value = TimeUnit.MILLISECONDS.toSeconds(it).toString()
             },
             {
                 // On Finish
-                progress.value = 1.0f
+                progress.value = 0.0f
                 buttonState.value = "Start"
                 textState.value = "60"
                 visible.value = true
@@ -155,8 +155,8 @@ fun MyCircularProgressIndicator(progress: Float, timerTextState: String) {
             modifier = Modifier
                 .height(350.dp)
                 .width(350.dp),
-            color = colorResource(R.color.purple_500),
-            stroke = 7
+            color = colorResource(R.color.light_grey),
+            stroke = 10
         )
 
         CircularProgressIndicator(
@@ -164,8 +164,8 @@ fun MyCircularProgressIndicator(progress: Float, timerTextState: String) {
                 .height(350.dp)
                 .width(350.dp),
             progress = animatedProgress,
-            color = colorResource(R.color.light_grey),
-            strokeWidth = 7.dp
+            color = colorResource(R.color.purple_500),
+            strokeWidth = 10.dp
         )
 
         Text(
@@ -187,24 +187,26 @@ fun CircularProgressIndicatorBackGround(
 ) {
     val style = with(LocalDensity.current) { Stroke(stroke.dp.toPx()) }
 
-    Canvas(modifier = modifier, onDraw = {
+    Canvas(
+        modifier = modifier,
+        onDraw = {
 
-        val innerRadius = (size.minDimension - style.width)/2
+            val innerRadius = (size.minDimension - style.width) / 2
 
-        drawArc(
-            color = color,
-            startAngle = 0f,
-            sweepAngle = 360f,
-            topLeft = Offset(
-                (size / 2.0f).width - innerRadius,
-                (size / 2.0f).height - innerRadius
-            ),
-            size = Size(innerRadius * 2, innerRadius * 2),
-            useCenter = false,
-            style = style
-        )
-
-    })
+            drawArc(
+                color = color,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                topLeft = Offset(
+                    (size / 2.0f).width - innerRadius,
+                    (size / 2.0f).height - innerRadius
+                ),
+                size = Size(innerRadius * 2, innerRadius * 2),
+                useCenter = false,
+                style = style
+            )
+        }
+    )
 }
 
 @ExperimentalAnimationApi
@@ -215,7 +217,6 @@ fun LightPreview() {
         MyApp()
     }
 }
-
 
 @ExperimentalAnimationApi
 @Preview("Dark Theme", widthDp = 360, heightDp = 640)
